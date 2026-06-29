@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T.E.C.S Admin — Control Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#0d1b2a;--steel:#1b3a5c;--sky:#4a9bc4;--glow:#e07b20;--glow-lt:#f0a050;--paper:#e8f0f8;--white:#fff;--muted:#8aa4bc;--rule:#2a4a6a;--green:#22c55e;--red:#ef4444;--yellow:#f59e0b;--purple:#a78bfa;--sidebar-w:250px}
+html{scroll-behavior:smooth}
+body{background:var(--navy);color:var(--white);font-family:'Inter',sans-serif;font-weight:300;line-height:1.6;display:flex;min-height:100vh;overflow-x:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:#060d14;border-right:1px solid var(--rule);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.sidebar-logo{padding:20px 18px 16px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo-mark{width:34px;height:34px;flex-shrink:0}
+.logo-text{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:1.05rem;letter-spacing:.05em;color:var(--white);line-height:1}
+.logo-text small{display:block;font-size:.52rem;font-weight:400;letter-spacing:.2em;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.sidebar-label{font-size:.58rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);padding:16px 18px 5px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;color:var(--muted);font-size:.82rem;font-weight:500;cursor:pointer;transition:background .15s,color .15s;border-left:3px solid transparent;text-decoration:none}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-item:hover{background:rgba(74,155,196,.08);color:var(--white)}
+.nav-item.active{background:rgba(74,155,196,.12);color:var(--sky);border-left-color:var(--sky)}
+.nav-badge{margin-left:auto;background:var(--glow);color:#fff;font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:10px;min-width:18px;text-align:center}
+.nav-badge.blue{background:var(--sky)}
+.sidebar-bottom{margin-top:auto;padding:14px 18px;border-top:1px solid var(--rule);flex-shrink:0}
+.back-link{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.78rem;text-decoration:none;transition:color .2s}
+.back-link:hover{color:var(--white)}
+.back-link svg{width:13px;height:13px}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:60px;background:#060d14;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50}
+.topbar-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.topbar-right{display:flex;align-items:center;gap:14px}
+.server-status{font-size:.72rem;padding:4px 10px;border-radius:20px;font-weight:600}
+.server-online{background:rgba(34,197,94,.15);color:var(--green)}
+.server-offline{background:rgba(239,68,68,.15);color:var(--red)}
+.last-refreshed{font-size:.72rem;color:var(--muted)}
+.refresh-btn{background:var(--steel);border:1px solid var(--rule);color:var(--muted);padding:7px 14px;border-radius:4px;font-size:.75rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.refresh-btn:hover{border-color:var(--sky);color:var(--sky)}
+.refresh-btn svg{width:13px;height:13px}
+.refresh-btn.spinning svg{animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.content{padding:26px;flex:1}
+.section{display:none}
+.section.active{display:block}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
+.stat-card{background:var(--steel);border:1px solid var(--rule);border-radius:8px;padding:18px 20px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.stat-card.rfqs::before{background:var(--glow)}
+.stat-card.bookings::before{background:var(--sky)}
+.stat-card.enquiries::before{background:var(--green)}
+.stat-card.revenue::before{background:var(--purple)}
+.stat-card.products::before{background:var(--yellow)}
+.stat-label{font-size:.62rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.stat-value{font-family:'Barlow Condensed',sans-serif;font-size:2.2rem;font-weight:700;line-height:1}
+.stat-sub{font-size:.7rem;color:var(--muted);margin-top:5px}
+.stat-icon{position:absolute;bottom:12px;right:14px;opacity:.1}
+.stat-icon svg{width:34px;height:34px}
+
+/* TABLES */
+.card{background:var(--steel);border:1px solid var(--rule);border-radius:8px;overflow:hidden;margin-bottom:22px}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.card-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.search-input{background:var(--navy);border:1px solid var(--rule);color:var(--white);font-family:'Inter',sans-serif;font-size:.8rem;padding:7px 12px;border-radius:4px;outline:none;width:200px;transition:border-color .2s}
+.search-input:focus{border-color:var(--sky)}
+.search-input::placeholder{color:var(--muted)}
+.filter-select{background:var(--navy);border:1px solid var(--rule);color:var(--white);font-family:'Inter',sans-serif;font-size:.78rem;padding:7px 10px;border-radius:4px;outline:none;cursor:pointer}
+.clear-btn{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--red);font-size:.72rem;font-weight:600;padding:7px 12px;border-radius:4px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .2s}
+.clear-btn:hover{background:rgba(239,68,68,.25)}
+.badge{display:inline-flex;align-items:center;font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+.badge-pending{background:rgba(245,158,11,.15);color:var(--yellow)}
+.badge-confirmed{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-new{background:rgba(74,155,196,.15);color:var(--sky)}
+.badge-rfq{background:rgba(224,123,32,.15);color:var(--glow)}
+.badge-processing{background:rgba(167,139,250,.15);color:var(--purple)}
+.badge-cancelled{background:rgba(239,68,68,.15);color:var(--red)}
+.badge-completed{background:rgba(34,197,94,.15);color:var(--green)}
+.badge-contacted{background:rgba(167,139,250,.15);color:var(--purple)}
+table{width:100%;border-collapse:collapse}
+thead tr{background:#0a1620}
+th{padding:10px 16px;text-align:left;font-size:.62rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:12px 16px;font-size:.82rem;border-bottom:1px solid rgba(42,74,106,.45);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(74,155,196,.04)}
+.td-mono{font-family:'Barlow Condensed',sans-serif;font-size:.95rem;font-weight:600;letter-spacing:.03em}
+.td-muted{color:var(--muted);font-size:.78rem}
+.td-name{font-weight:500}
+.action-btn{background:none;border:1px solid var(--rule);color:var(--muted);padding:4px 10px;border-radius:3px;font-size:.7rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;cursor:pointer;transition:all .15s}
+.action-btn:hover{border-color:var(--sky);color:var(--sky)}
+.action-btn.del{margin-left:4px}
+.action-btn.del:hover{border-color:var(--red);color:var(--red)}
+.empty-state{padding:48px;text-align:center;color:var(--muted);font-size:.88rem}
+.empty-state svg{width:40px;height:40px;margin:0 auto 12px;display:block;opacity:.4}
+
+/* PRODUCTS GRID */
+.products-admin-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding:18px}
+.prod-admin-card{background:var(--navy);border:1px solid var(--rule);border-radius:6px;overflow:hidden;position:relative}
+.prod-img-wrap{width:100%;aspect-ratio:4/3;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.prod-img-wrap img{width:100%;height:100%;object-fit:contain;padding:8px}
+.prod-info{padding:14px}
+.prod-admin-brand{font-size:.62rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px}
+.prod-admin-name{font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;line-height:1.2;margin-bottom:8px}
+.prod-admin-row{display:flex;justify-content:space-between;align-items:center}
+.prod-admin-price{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;color:var(--glow)}
+.prod-admin-type{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+.prod-badge{position:absolute;top:8px;left:8px;background:var(--glow);color:#fff;font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:2px}
+.prod-badge.new-badge{background:var(--green)}
+
+/* OVERVIEW */
+.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+.mini-list{padding:6px 0}
+.mini-row{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;border-bottom:1px solid rgba(42,74,106,.4);gap:12px}
+.mini-row:last-child{border-bottom:none}
+.mini-label{font-size:.82rem;font-weight:500}
+.mini-sub{font-size:.7rem;color:var(--muted);margin-top:2px}
+.mini-val{font-family:'Barlow Condensed',sans-serif;font-size:1.05rem;font-weight:700;text-align:right;white-space:nowrap}
+.mini-val small{font-family:'Inter',sans-serif;font-size:.65rem;color:var(--muted);display:block;font-weight:400}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:#1a3a5a;border:1px solid var(--sky);color:var(--white);padding:13px 20px;border-radius:6px;font-size:.83rem;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:320px;line-height:1.4}
+.toast.show{transform:none;opacity:1}
+.toast.error{background:#3a1a1a;border-color:var(--red)}
+
+/* DRAWER */
+.drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;opacity:0;pointer-events:none;transition:opacity .3s}
+.drawer-overlay.open{opacity:1;pointer-events:all}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:440px;max-width:100vw;background:var(--navy);border-left:1px solid var(--rule);z-index:201;transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;display:flex;flex-direction:column}
+.drawer.open{transform:none}
+.drawer-head{padding:20px 22px 14px;border-bottom:1px solid var(--rule);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:sticky;top:0;background:var(--navy);z-index:1}
+.drawer-title{font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.drawer-close{background:none;border:none;color:var(--muted);font-size:1.4rem;cursor:pointer;transition:color .2s;line-height:1}
+.drawer-close:hover{color:var(--white)}
+.drawer-body{padding:20px 22px;flex:1}
+.detail-row{margin-bottom:16px}
+.detail-label{font-size:.6rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.detail-value{font-size:.9rem;font-weight:500;line-height:1.55}
+.detail-msg{background:var(--steel);padding:12px;border-radius:4px;font-size:.85rem;line-height:1.7;white-space:pre-wrap;word-break:break-word}
+.detail-items-table{width:100%;border-collapse:collapse;margin-top:8px}
+.detail-items-table th{font-size:.62rem;font-weight:600;color:var(--muted);text-align:left;padding:6px 0;border-bottom:1px solid var(--rule);letter-spacing:.1em;text-transform:uppercase}
+.detail-items-table td{font-size:.82rem;padding:9px 0;border-bottom:1px solid rgba(42,74,106,.4)}
+.detail-total{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule)}
+.detail-total-label{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.detail-total-val{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;color:var(--glow)}
+.contact-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.cta{display:inline-block;padding:10px 18px;border-radius:4px;text-decoration:none;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border:none}
+.cta-call{background:var(--sky);color:#fff}
+.cta-wa{background:#22c55e;color:#fff}
+.cta-email{background:var(--steel);border:1px solid var(--rule);color:var(--white)}
+.cta-del{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);color:var(--red)}
+
+/* CONFIRM DELETE DIALOG */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s}
+.confirm-overlay.open{opacity:1;pointer-events:all}
+.confirm-box{background:var(--navy);border:1px solid var(--red);border-radius:10px;padding:28px;max-width:360px;width:100%;text-align:center}
+.confirm-box h3{font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700;text-transform:uppercase;margin-bottom:10px;color:var(--red)}
+.confirm-box p{font-size:.85rem;color:var(--muted);margin-bottom:22px;line-height:1.6}
+.confirm-actions{display:flex;gap:10px;justify-content:center}
+.btn-cancel{background:var(--steel);border:1px solid var(--rule);color:var(--muted);padding:10px 22px;border-radius:4px;font-weight:600;font-size:.82rem;cursor:pointer;letter-spacing:.06em;text-transform:uppercase}
+.btn-delete{background:var(--red);color:#fff;padding:10px 22px;border-radius:4px;font-weight:600;font-size:.82rem;cursor:pointer;border:none;letter-spacing:.06em;text-transform:uppercase}
+
+/* RESPONSIVE */
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:900px){.sidebar{width:200px}.main{margin-left:200px}.stats-row{grid-template-columns:1fr 1fr}.overview-grid{grid-template-columns:1fr}}
+@media(max-width:640px){.sidebar{display:none}.main{margin-left:0}.stats-row{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <svg class="logo-mark" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="19" stroke="#4a9bc4" stroke-width="1.5"/>
+      <circle cx="20" cy="20" r="5" fill="#e07b20"/>
+      <circle cx="20" cy="20" r="12" stroke="#4a9bc4" stroke-width="1" stroke-dasharray="4 3"/>
+      <path d="M20 8v4M20 28v4M8 20h4M28 20h4" stroke="#4a9bc4" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    <div class="logo-text">T.E.C.S<small>Admin Panel</small></div>
+  </div>
+
+  <div class="sidebar-label">Overview</div>
+  <a class="nav-item active" onclick="showSection('overview',this)" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Dashboard
+  </a>
+
+  <div class="sidebar-label">Manage</div>
+  <a class="nav-item" onclick="showSection('rfqs',this)" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    RFQs
+    <span class="nav-badge" id="nav-rfq-count">0</span>
+  </a>
+  <a class="nav-item" onclick="showSection('bookings',this)" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Bookings
+    <span class="nav-badge blue" id="nav-booking-count">0</span>
+  </a>
+  <a class="nav-item" onclick="showSection('enquiries',this)" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+    Enquiries
+  </a>
+  <a class="nav-item" onclick="showSection('products',this)" href="#">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+    Products
+  </a>
+
+  <div class="sidebar-bottom">
+    <a class="back-link" href="index.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Website
+    </a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbarTitle">Dashboard</span>
+    <div class="topbar-right">
+      <span class="server-status server-offline" id="serverStatus">● Connecting…</span>
+      <span class="last-refreshed" id="lastRefreshed">—</span>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadAll()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW -->
+    <div class="section active" id="sec-overview">
+      <div class="stats-row">
+        <div class="stat-card rfqs">
+          <div class="stat-label">Total RFQs</div>
+          <div class="stat-value" id="stat-rfqs">—</div>
+          <div class="stat-sub" id="stat-rfqs-sub">Spare parts requests</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        </div>
+        <div class="stat-card bookings">
+          <div class="stat-label">Bookings</div>
+          <div class="stat-value" id="stat-bookings">—</div>
+          <div class="stat-sub" id="stat-bookings-conf">Engineer visits</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        </div>
+        <div class="stat-card enquiries">
+          <div class="stat-label">Enquiries</div>
+          <div class="stat-value" id="stat-enquiries">—</div>
+          <div class="stat-sub">General contact leads</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
+        </div>
+        <div class="stat-card revenue">
+          <div class="stat-label">Est. RFQ Value</div>
+          <div class="stat-value" id="stat-revenue">—</div>
+          <div class="stat-sub">Indicative total</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        </div>
+        <div class="stat-card products">
+          <div class="stat-label">Products</div>
+          <div class="stat-value" id="stat-products">—</div>
+          <div class="stat-sub">In catalogue</div>
+          <div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>
+        </div>
+      </div>
+
+      <div class="overview-grid">
+        <div class="card">
+          <div class="card-head"><span class="card-title">&#128203; Recent RFQs</span></div>
+          <div id="overview-rfqs" class="mini-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">&#128295; Recent Bookings</span></div>
+          <div id="overview-bookings" class="mini-list"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">&#9993; Recent Enquiries</span></div>
+        <div id="overview-enquiries" class="mini-list"></div>
+      </div>
+    </div>
+
+    <!-- RFQs -->
+    <div class="section" id="sec-rfqs">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">All RFQs (Request For Quotation)</span>
+          <div class="card-actions">
+            <input type="text" class="search-input" id="rfq-search" placeholder="Search name, company, product…" oninput="renderRFQs()">
+            <select class="filter-select" id="rfq-filter" onchange="renderRFQs()">
+              <option value="">All statuses</option>
+              <option value="RFQ">New RFQ</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Quoted">Quoted</option>
+              <option value="Closed">Closed</option>
+            </select>
+            <button class="clear-btn" onclick="confirmClearAll('rfqs')">&#128465; Clear All</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Ref ID</th><th>Name</th><th>Company</th><th>Contact</th><th>Products</th><th>Est. Value</th><th>Status</th><th>Date</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="rfqs-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- BOOKINGS -->
+    <div class="section" id="sec-bookings">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">All Engineer Bookings</span>
+          <div class="card-actions">
+            <input type="text" class="search-input" id="booking-search" placeholder="Search name or company…" oninput="renderBookings()">
+            <select class="filter-select" id="booking-filter" onchange="renderBookings()">
+              <option value="">All statuses</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Pending">Pending</option>
+              <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            <button class="clear-btn" onclick="confirmClearAll('bookings')">&#128465; Clear All</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Company</th><th>Phone</th><th>Specialist</th><th>Date</th><th>Status</th><th>Received</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="bookings-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ENQUIRIES -->
+    <div class="section" id="sec-enquiries">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">All Enquiries</span>
+          <div class="card-actions">
+            <input type="text" class="search-input" id="enquiry-search" placeholder="Search name or company…" oninput="renderEnquiries()">
+            <select class="filter-select" id="enquiry-filter" onchange="renderEnquiries()">
+              <option value="">All statuses</option>
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="Closed">Closed</option>
+            </select>
+            <button class="clear-btn" onclick="confirmClearAll('enquiries')">&#128465; Clear All</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Name</th><th>Company</th><th>Contact</th><th>Service</th><th>Status</th><th>Date</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="enquiries-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="section" id="sec-products">
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Products Catalogue</span>
+          <div class="card-actions">
+            <input type="text" class="search-input" id="product-search" placeholder="Search product or brand…" oninput="renderProducts()">
+            <select class="filter-select" id="product-filter" onchange="renderProducts()">
+              <option value="">All brands</option>
+              <option value="Forbes Marshall">Forbes Marshall</option>
+              <option value="Shinkawa">Shinkawa</option>
+              <option value="TECS">TECS</option>
+            </select>
+          </div>
+        </div>
+        <div id="products-grid" class="products-admin-grid"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- DETAIL DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <div class="drawer-title" id="drawerTitle">Details</div>
+    <button class="drawer-close" onclick="closeDrawer()">&#215;</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+</div>
+
+<!-- CONFIRM DELETE DIALOG -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <h3>&#9888; Confirm Delete</h3>
+    <p id="confirmMsg">Are you sure? This cannot be undone.</p>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-delete" id="confirmOkBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:3000';
+let allEnquiries = [], allBookings = [], allProducts = [];
+let serverOnline = false;
+
+// ── Section Nav ──
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(a => a.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  if(el) el.classList.add('active');
+  const titles = {overview:'Dashboard', rfqs:'RFQs — Spare Parts Requests', bookings:'Engineer Bookings', enquiries:'General Enquiries', products:'Products Catalogue'};
+  document.getElementById('topbarTitle').textContent = titles[name] || name;
+}
+
+// ── Toast ──
+function showToast(msg, err=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err?' error':'');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// ── Format ──
+function fmt(n){ return '₹' + Number(n||0).toLocaleString('en-IN'); }
+function fmtDate(iso){ if(!iso) return '—'; const d=new Date(iso); return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function badgeHtml(status){
+  const map={Pending:'pending',Confirmed:'confirmed',New:'new',RFQ:'rfq',Processing:'processing',Cancelled:'cancelled',Completed:'completed',Contacted:'contacted',Closed:'cancelled',Quoted:'processing'};
+  return `<span class="badge badge-${map[status]||'new'}">${status||'—'}</span>`;
+}
+
+// ── Extract RFQ value from message ──
+function extractRFQValue(msg) {
+  if(!msg) return 0;
+  const match = msg.match(/Indicative Total: ₹([\d,]+)/);
+  if(match) return parseInt(match[1].replace(/,/g,''));
+  return 0;
+}
+
+// ── Get RFQs (enquiries with status='RFQ') ──
+function getRFQs() { return allEnquiries.filter(e => e.status === 'RFQ' || e.service === 'Spare Parts RFQ'); }
+function getNonRFQEnquiries() { return allEnquiries.filter(e => e.status !== 'RFQ' && e.service !== 'Spare Parts RFQ'); }
+
+// ── Load All Data ──
+async function loadAll() {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  try {
+    const [b, e, p] = await Promise.all([
+      fetch(API+'/api/bookings').then(r=>r.json()),
+      fetch(API+'/api/enquiries').then(r=>r.json()),
+      fetch(API+'/api/products').then(r=>r.json()),
+    ]);
+    allBookings = b; allEnquiries = e; allProducts = p;
+    serverOnline = true;
+    document.getElementById('serverStatus').textContent = '● Server Online';
+    document.getElementById('serverStatus').className = 'server-status server-online';
+  } catch(err) {
+    serverOnline = false;
+    document.getElementById('serverStatus').textContent = '● Server Offline';
+    document.getElementById('serverStatus').className = 'server-status server-offline';
+    // Load from localStorage fallback
+    allBookings  = JSON.parse(localStorage.getItem('tecs_bookings')  || '[]');
+    allEnquiries = JSON.parse(localStorage.getItem('tecs_enquiries') || '[]');
+    allProducts  = [];
+    showToast('Server offline — showing localStorage data', true);
+  }
+  renderStats();
+  renderOverview();
+  renderRFQs();
+  renderBookings();
+  renderEnquiries();
+  renderProducts();
+  updateNavBadges();
+  document.getElementById('lastRefreshed').textContent = 'Updated ' + new Date().toLocaleTimeString('en-IN');
+  btn.classList.remove('spinning');
+}
+
+// ── Nav Badges ──
+function updateNavBadges() {
+  document.getElementById('nav-rfq-count').textContent = getRFQs().length;
+  document.getElementById('nav-booking-count').textContent = allBookings.length;
+}
+
+// ── Stats ──
+function renderStats() {
+  const rfqs = getRFQs();
+  const rfqVal = rfqs.reduce((s,r) => s + extractRFQValue(r.message), 0);
+  document.getElementById('stat-rfqs').textContent = rfqs.length;
+  document.getElementById('stat-rfqs-sub').textContent = 'Est. value: ' + fmt(rfqVal);
+  document.getElementById('stat-bookings').textContent = allBookings.length;
+  document.getElementById('stat-bookings-conf').textContent = 'Confirmed: ' + allBookings.filter(b=>b.status==='Confirmed').length;
+  document.getElementById('stat-enquiries').textContent = getNonRFQEnquiries().length;
+  document.getElementById('stat-revenue').textContent = fmt(rfqVal);
+  document.getElementById('stat-products').textContent = allProducts.length;
+}
+
+// ── Overview ──
+function renderOverview() {
+  const rfqs = getRFQs();
+  document.getElementById('overview-rfqs').innerHTML = rfqs.slice(0,5).map(r=>`
+    <div class="mini-row">
+      <div>
+        <div class="mini-label">${r.name||'—'} &mdash; ${r.company||'—'}</div>
+        <div class="td-muted">${r.contact||'—'}</div>
+      </div>
+      <div class="mini-val">${fmt(extractRFQValue(r.message))}<small>${badgeHtml(r.status)}</small></div>
+    </div>`).join('') || '<div class="empty-state">No RFQs yet</div>';
+
+  document.getElementById('overview-bookings').innerHTML = allBookings.slice(0,5).map(b=>`
+    <div class="mini-row">
+      <div>
+        <div class="mini-label">${b.name||'—'}</div>
+        <div class="td-muted">${b.company||'—'} · ${b.specialist||'General'}</div>
+      </div>
+      <div class="mini-val"><small>${badgeHtml(b.status)}</small></div>
+    </div>`).join('') || '<div class="empty-state">No bookings yet</div>';
+
+  document.getElementById('overview-enquiries').innerHTML = getNonRFQEnquiries().slice(0,5).map(e=>`
+    <div class="mini-row">
+      <div>
+        <div class="mini-label">${e.name||'—'}</div>
+        <div class="td-muted">${e.company||'—'} · ${e.service||'General'}</div>
+      </div>
+      <div class="mini-val"><small>${badgeHtml(e.status)}</small></div>
+    </div>`).join('') || '<div class="empty-state">No enquiries yet</div>';
+}
+
+// ── RFQs Table ──
+function renderRFQs() {
+  const q = document.getElementById('rfq-search').value.toLowerCase();
+  const f = document.getElementById('rfq-filter').value;
+  let rows = getRFQs().filter(r => {
+    const hay = ((r.name||'')+(r.company||'')+(r.message||'')).toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(f && r.status !== f) return false;
+    return true;
+  });
+  const tb = document.getElementById('rfqs-tbody');
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted)">No RFQs found</td></tr>`; return; }
+  tb.innerHTML = rows.map(r => {
+    const refMatch = (r.message||'').match(/RFQ ID: ([A-Z0-9\-]+)/);
+    const refId = refMatch ? refMatch[1] : (r.id||'').slice(-6).toUpperCase();
+    const val = extractRFQValue(r.message);
+    // Extract item count from message
+    const itemLines = (r.message||'').split('\n').filter(l => l.trim().startsWith('-'));
+    const itemSummary = itemLines.length ? itemLines.length + ' item(s)' : '—';
+    return `<tr>
+      <td class="td-mono" style="color:var(--glow)">${refId}</td>
+      <td class="td-name">${r.name||'—'}</td>
+      <td class="td-muted">${r.company||'—'}</td>
+      <td><a href="tel:${r.contact}" style="color:var(--sky);text-decoration:none;font-size:.8rem">${r.contact||'—'}</a></td>
+      <td class="td-muted">${itemSummary}</td>
+      <td class="td-mono" style="color:var(--glow)">${val ? fmt(val) : '—'}</td>
+      <td>${badgeHtml(r.status)}</td>
+      <td class="td-muted">${fmtDate(r.createdAt)}</td>
+      <td style="white-space:nowrap">
+        <button class="action-btn" onclick='openRFQDetail(${JSON.stringify(r)})'>View</button>
+        <button class="action-btn del" onclick="deleteRecord('enquiries','${r._id||r.id}','${(r.name||'').replace(/'/g,'')}')">Del</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Bookings Table ──
+function renderBookings() {
+  const q = document.getElementById('booking-search').value.toLowerCase();
+  const f = document.getElementById('booking-filter').value;
+  let rows = allBookings.filter(b => {
+    const hay = ((b.name||'')+(b.company||'')).toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(f && b.status !== f) return false;
+    return true;
+  });
+  const tb = document.getElementById('bookings-tbody');
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--muted)">No bookings found</td></tr>`; return; }
+  tb.innerHTML = rows.map(b=>`
+    <tr>
+      <td class="td-name">${b.name||'—'}</td>
+      <td class="td-muted">${b.company||'—'}</td>
+      <td><a href="tel:${b.phone}" style="color:var(--sky);text-decoration:none;font-size:.82rem">${b.phone||'—'}</a></td>
+      <td class="td-muted">${b.specialist||'General'}</td>
+      <td class="td-muted">${b.date||'Not set'}</td>
+      <td>${badgeHtml(b.status)}</td>
+      <td class="td-muted">${fmtDate(b.createdAt)}</td>
+      <td style="white-space:nowrap">
+        <button class="action-btn" onclick='openBookingDetail(${JSON.stringify(b)})'>View</button>
+        <button class="action-btn del" onclick="deleteRecord('bookings','${b._id||b.id}','${(b.name||'').replace(/'/g,'')}')">Del</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ── Enquiries Table ──
+function renderEnquiries() {
+  const q = document.getElementById('enquiry-search').value.toLowerCase();
+  const f = document.getElementById('enquiry-filter').value;
+  let rows = getNonRFQEnquiries().filter(e => {
+    const hay = ((e.name||'')+(e.company||'')).toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(f && e.status !== f) return false;
+    return true;
+  });
+  const tb = document.getElementById('enquiries-tbody');
+  if(!rows.length){ tb.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--muted)">No enquiries found</td></tr>`; return; }
+  tb.innerHTML = rows.map(e=>`
+    <tr>
+      <td class="td-name">${e.name||'—'}</td>
+      <td class="td-muted">${e.company||'—'}</td>
+      <td style="font-size:.8rem;color:var(--sky)">${e.contact||'—'}</td>
+      <td class="td-muted">${e.service||'General'}</td>
+      <td>${badgeHtml(e.status)}</td>
+      <td class="td-muted">${fmtDate(e.createdAt)}</td>
+      <td style="white-space:nowrap">
+        <button class="action-btn" onclick='openEnquiryDetail(${JSON.stringify(e)})'>View</button>
+        <button class="action-btn del" onclick="deleteRecord('enquiries','${e._id||e.id}','${(e.name||'').replace(/'/g,'')}')">Del</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ── Products Grid ──
+function renderProducts() {
+  const q = document.getElementById('product-search').value.toLowerCase();
+  const f = document.getElementById('product-filter').value;
+  let rows = allProducts.filter(p => {
+    const hay = ((p.name||'')+(p.brand||'')).toLowerCase();
+    if(q && !hay.includes(q)) return false;
+    if(f && p.brand !== f) return false;
+    return true;
+  });
+  const grid = document.getElementById('products-grid');
+  if(!rows.length){ grid.innerHTML='<div class="empty-state" style="padding:48px;text-align:center;color:var(--muted)">No products found</div>'; return; }
+  grid.innerHTML = rows.map(p=>`
+    <div class="prod-admin-card">
+      ${p.badge ? `<span class="prod-badge ${p.badge==='New'?'new-badge':''}">${p.badge}</span>` : ''}
+      <div class="prod-img-wrap">
+        ${p.img ? `<img src="${p.img}" alt="${p.name}" onerror="this.style.display='none'">` : ''}
+      </div>
+      <div class="prod-info">
+        <div class="prod-admin-brand">${p.brand||'—'}</div>
+        <div class="prod-admin-name">${p.name}</div>
+        <div class="prod-admin-row">
+          <div class="prod-admin-price">${fmt(p.price)}</div>
+        </div>
+        <div class="prod-admin-type">${p.type||''}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ── Drawer ──
+function openDrawer(title, html) {
+  document.getElementById('drawerTitle').textContent = title;
+  document.getElementById('drawerBody').innerHTML = html;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+// ── RFQ Detail ──
+function openRFQDetail(r) {
+  const refMatch = (r.message||'').match(/RFQ ID: ([A-Z0-9\-]+)/);
+  const refId = refMatch ? refMatch[1] : '—';
+  const val = extractRFQValue(r.message);
+  const itemLines = (r.message||'').split('\n').filter(l => l.trim().startsWith('-'));
+  const itemsHtml = itemLines.map(l => `<div style="padding:6px 0;border-bottom:1px solid rgba(42,74,106,.4);font-size:.83rem">${l.trim()}</div>`).join('');
+  const notesMatch = (r.message||'').match(/Notes: (.+)/s);
+  const deliveryMatch = (r.message||'').match(/Delivery: (.+)/);
+  openDrawer('RFQ — ' + refId, `
+    <div class="detail-row"><div class="detail-label">RFQ Reference</div><div class="detail-value td-mono" style="color:var(--glow);font-size:1.1rem">${refId}</div></div>
+    <div class="detail-row"><div class="detail-label">Customer Name</div><div class="detail-value">${r.name||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Company / Plant</div><div class="detail-value">${r.company||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value"><a href="tel:${r.contact}" style="color:var(--sky)">${r.contact||'—'}</a></div></div>
+    ${deliveryMatch?`<div class="detail-row"><div class="detail-label">Delivery Location</div><div class="detail-value">${deliveryMatch[1]}</div></div>`:''}
+    <div class="detail-row">
+      <div class="detail-label">Products Requested</div>
+      <div style="margin-top:6px">${itemsHtml || '<span style="color:var(--muted)">See message below</span>'}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">Indicative Total</div>
+      <div class="detail-value" style="font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;color:var(--glow)">${val ? fmt(val) : '—'}</div>
+      <div style="font-size:.7rem;color:var(--muted);margin-top:3px">Final price to be confirmed in official quotation</div>
+    </div>
+    ${notesMatch?`<div class="detail-row"><div class="detail-label">Customer Notes</div><div class="detail-msg">${notesMatch[1]}</div></div>`:''}
+    <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${badgeHtml(r.status)}</div></div>
+    <div class="detail-row"><div class="detail-label">Received On</div><div class="detail-value">${fmtDate(r.createdAt)}</div></div>
+    <div class="contact-actions">
+      <a href="tel:${r.contact}" class="cta cta-call">&#128222; Call</a>
+      <a href="https://wa.me/${(r.contact||'').replace(/[^0-9]/g,'')}" target="_blank" class="cta cta-wa">&#128242; WhatsApp</a>
+      <a href="mailto:${r.contact}?subject=Quotation for ${refId} — T.E.C.S Pvt Ltd&body=Dear ${(r.name||'')},%0A%0AThank you for your RFQ (${refId}).%0A%0AWe have reviewed your requirement and will send you a formal quotation shortly.%0A%0ARegards,%0AT.E.C.S Pvt Ltd%0A+91-9817254252%0AInfo@tecspl.com" class="cta cta-email" style="background:var(--sky);color:#fff;text-decoration:none">&#9993; Email</a>
+      <button class="cta cta-del" onclick="deleteRecord('enquiries','${r._id||r.id}','${(r.name||'').replace(/'/g,'')}');closeDrawer()">&#128465; Delete</button>
+    </div>
+  `);
+}
+
+// ── Booking Detail ──
+function openBookingDetail(b) {
+  openDrawer('Booking — ' + (b.name||''), `
+    <div class="detail-row"><div class="detail-label">Full Name</div><div class="detail-value">${b.name||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Company / Plant</div><div class="detail-value">${b.company||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Phone</div><div class="detail-value"><a href="tel:${b.phone}" style="color:var(--sky)">${b.phone||'—'}</a></div></div>
+    <div class="detail-row"><div class="detail-label">Specialist Required</div><div class="detail-value">${b.specialist||'General'}</div></div>
+    <div class="detail-row"><div class="detail-label">Preferred Date</div><div class="detail-value">${b.date||'Not specified'}</div></div>
+    <div class="detail-row"><div class="detail-label">Job Description</div><div class="detail-value detail-msg">${b.job||'No description provided.'}</div></div>
+    <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${badgeHtml(b.status)}</div></div>
+    <div class="detail-row"><div class="detail-label">Received On</div><div class="detail-value">${fmtDate(b.createdAt)}</div></div>
+    <div class="contact-actions">
+      <a href="tel:${b.phone}" class="cta cta-call">&#128222; Call</a>
+      <a href="https://wa.me/${(b.phone||'').replace(/[^0-9]/g,'')}" target="_blank" class="cta cta-wa">&#128242; WhatsApp</a>
+      <a href="mailto:${b.phone}?subject=Re: Engineer Booking — ${(b.name||'')}&body=Dear ${(b.name||'')},%0A%0AThank you for booking an engineer with T.E.C.S Pvt Ltd.%0A%0AWe will contact you shortly to confirm the visit." class="cta cta-email" style="background:var(--sky);color:#fff;text-decoration:none">&#9993; Email</a>
+      <button class="cta cta-del" onclick="deleteRecord('bookings','${b._id||b.id}','${(b.name||'').replace(/'/g,'')}');closeDrawer()">&#128465; Delete</button>
+    </div>
+  `);
+}
+
+// ── Enquiry Detail ──
+function openEnquiryDetail(e) {
+  openDrawer('Enquiry — ' + (e.name||''), `
+    <div class="detail-row"><div class="detail-label">Name</div><div class="detail-value">${e.name||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Company</div><div class="detail-value">${e.company||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Contact</div><div class="detail-value"><a href="tel:${e.contact}" style="color:var(--sky)">${e.contact||'—'}</a></div></div>
+    <div class="detail-row"><div class="detail-label">Service Interested In</div><div class="detail-value">${e.service||'—'}</div></div>
+    <div class="detail-row"><div class="detail-label">Message</div><div class="detail-value detail-msg">${e.message||'No message provided.'}</div></div>
+    <div class="detail-row"><div class="detail-label">Status</div><div class="detail-value">${badgeHtml(e.status)}</div></div>
+    <div class="detail-row"><div class="detail-label">Received On</div><div class="detail-value">${fmtDate(e.createdAt)}</div></div>
+    <div class="contact-actions">
+      <a href="tel:${e.contact}" class="cta cta-call">&#128222; Call</a>
+      <a href="https://wa.me/${(e.contact||'').replace(/[^0-9]/g,'')}" target="_blank" class="cta cta-wa">&#128242; WhatsApp</a>
+      <a href="mailto:${e.contact}?subject=Re: Your Enquiry — T.E.C.S Pvt Ltd&body=Dear ${(e.name||'')},%0A%0AThank you for contacting T.E.C.S Pvt Ltd.%0A%0AWe have received your enquiry regarding ${(e.service||'our services')} and will respond shortly.%0A%0ARegards,%0AT.E.C.S Pvt Ltd%0A+91-9817254252%0AInfo@tecspl.com" class="cta cta-email" style="background:var(--sky);color:#fff;text-decoration:none">&#9993; Email</a>
+      <button class="cta cta-del" onclick="deleteRecord('enquiries','${e._id||e.id}','${(e.name||'').replace(/'/g,'')}');closeDrawer()">&#128465; Delete</button>
+    </div>
+  `);
+}
+
+// ══════════════════════════════
+// DELETE FUNCTIONS
+// ══════════════════════════════
+let pendingDelete = null;
+
+function deleteRecord(table, id, name) {
+  pendingDelete = {table, id, name};
+  document.getElementById('confirmMsg').textContent = `Delete "${name}"? This cannot be undone.`;
+  document.getElementById('confirmOkBtn').onclick = executDelete;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function confirmClearAll(table) {
+  const labels = {rfqs:'ALL RFQs', bookings:'ALL Bookings', enquiries:'ALL Enquiries'};
+  pendingDelete = {table, clearAll: true};
+  document.getElementById('confirmMsg').textContent = `Delete ${labels[table]}? Cannot be undone.`;
+  document.getElementById('confirmOkBtn').onclick = executDelete;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirmOverlay').classList.remove('open');
+  // DO NOT set pendingDelete=null here — executDelete still needs it
+}
+
+async function executDelete() {
+  // Read BEFORE closing (closeConfirm was setting it to null — that was the bug)
+  const action = pendingDelete;
+  document.getElementById('confirmOverlay').classList.remove('open');
+  if(!action) { showToast('Nothing to delete', true); return; }
+  pendingDelete = null;
+  const {table, id, clearAll} = action;
+  const apiTable = table === 'rfqs' ? 'enquiries' : table;
+
+  showToast('Deleting...');
+  console.log('[Admin] Delete:', {table, apiTable, id, clearAll});
+
+  try {
+    if(clearAll) {
+      let url = `${API}/api/${apiTable}`;
+      if(table === 'rfqs')      url += '?filter=rfq';
+      if(table === 'enquiries') url += '?filter=general';
+      const res  = await fetch(url, {method:'DELETE'});
+      const data = await res.json();
+      console.log('[Admin] Bulk delete result:', data);
+      showToast('Deleted ' + (data.deleted||0) + ' records!');
+    } else {
+      if(!id || id === 'undefined' || id === 'null') {
+        showToast('ID missing — use Clear All button instead', true);
+        return;
+      }
+      const url = `${API}/api/${apiTable}/${encodeURIComponent(id)}`;
+      console.log('[Admin] DELETE', url);
+      const res  = await fetch(url, {method:'DELETE'});
+      const data = await res.json();
+      console.log('[Admin] Delete result:', data);
+      if((data.deleted||0) > 0) {
+        showToast('Record deleted! Method: ' + (data.method||'ok'));
+      } else {
+        showToast('Not found (ID: ' + id.substring(0,8) + '...). Try Clear All.', true);
+      }
+    }
+  } catch(e) {
+    console.error('[Admin] Delete error:', e);
+    showToast('Error: ' + e.message, true);
+  }
+  await loadAll();
+}
+
+// ── Auto refresh every 60s ──
+loadAll();
+setInterval(loadAll, 60000);
+</script>
+</body>
+</html>

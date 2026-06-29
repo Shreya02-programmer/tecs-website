@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T.E.C.S — No Internet</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d1b2a;color:#fff;font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center}
+.logo{width:70px;height:70px;margin:0 auto 20px}
+h1{font-family:'Barlow Condensed',sans-serif;font-size:2rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;color:#fff}
+p{color:#8aa4bc;font-size:.9rem;line-height:1.7;margin-bottom:24px;max-width:320px}
+.btn{background:#e07b20;color:#fff;font-weight:600;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;padding:12px 28px;border-radius:4px;border:none;cursor:pointer;display:inline-block;text-decoration:none}
+.contact{margin-top:32px;padding-top:24px;border-top:1px solid #2a4a6a}
+.contact a{color:#4a9bc4;text-decoration:none;font-size:.85rem;display:block;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div>
+  <svg class="logo" viewBox="0 0 70 70" fill="none">
+    <circle cx="35" cy="35" r="33" stroke="#4a9bc4" stroke-width="2"/>
+    <circle cx="35" cy="35" r="20" stroke="#4a9bc4" stroke-width="1" stroke-dasharray="5 4"/>
+    <circle cx="35" cy="35" r="10" fill="#e07b20"/>
+    <text x="35" y="35" text-anchor="middle" dominant-baseline="middle" font-family="Arial Black" font-size="7" font-weight="900" fill="#fff">TECS</text>
+  </svg>
+  <h1>No Internet</h1>
+  <p>You're offline. Please check your internet connection and try again.</p>
+  <p style="font-size:.8rem;margin-bottom:20px">Your RFQ list is saved — it will be sent once you're back online.</p>
+  <button class="btn" onclick="window.location.reload()">Try Again</button>
+  <div class="contact">
+    <p style="font-size:.8rem;color:#8aa4bc;margin-bottom:12px">Contact us directly:</p>
+    <a href="tel:+919817254252">📞 +91-9817254252</a>
+    <a href="mailto:Info@tecspl.com">✉ Info@tecspl.com</a>
+  </div>
+</div>
+</body>
+</html>
